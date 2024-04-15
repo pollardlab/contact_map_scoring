@@ -5,7 +5,9 @@ Preprint link: https://www.biorxiv.org/content/10.1101/2023.04.04.535480v1
 In this repo, you can find:
 - [Scoring code](https://github.com/pollardlab/contact_map_scoring/blob/main/code/scoring.py) for basic, map-motivated, and feature-motivated scoring methods.
 - [Tutorials](https://github.com/pollardlab/contact_map_scoring/tree/main/notebooks) for running code on Hi-C contact maps.
-- [Dataset](https://github.com/pollardlab/contact_map_scoring/tree/main/data) of scored _in silico_ insertions and deletions. 
+- [Dataset](https://github.com/pollardlab/contact_map_scoring/tree/main/data) of:
+	* Scored _in silico_ insertions and deletions
+	* Windows around differentially expressed genes between ESC and HFF
 
 ![](notebooks/images/Fig1.png)
 
