@@ -21,6 +21,10 @@ from skimage.transform import resize
 from hicrep import sccByDiag
 from cooltools.lib import peaks
 
+
+
+# Akita parameters
+
 BINS = 448  # length of side of square matrix
 DIAG_OFFSET = 2  # if the diagonal is offset by a number of bins:
 input_map_size = 2 ** 20
@@ -33,11 +37,7 @@ input_map_size = 2 ** 20
 #  - - - - -         - - - - j           - - - l m
 #  - - - - -         - - - - -           - - - - n
 
-# This is an example of DIAG_OFFSET = 1
-#  - a b b c
-#  - - - d e
-#  - - - - f
-#  - - - - -
+
 
 # -------------------- HELPER FUNCTIONS ----------------- #
 
@@ -107,22 +107,6 @@ def spearman_1D(vector_a, vector_b):
     return spearmanr_val
 
 
-def pearson_1D(vector_a, vector_b):
-    """
-    Function to calculate the pearson correlation between two 1D arrays.
-
-    Input:
-        vector_a: 1D numpy array of length(n)
-        vector_b: 1D numpy array of length(n)
-    Returns:
-        scalar value
-    """
-
-    vector_a, vector_b = remove_missing_points_flat(vector_a, vector_b)
-
-    pearsonr_val, pval = stats.pearsonr(vector_a, vector_b)
-    return pearsonr_val
-
 
 def mse_1D(vector_a, vector_b):
     """
@@ -163,7 +147,7 @@ def mse(map_a, map_b):
 
 
 #### SPEARMAN'S RANK CORRELATION COEF ####
-def spearman(map_a, map_b):
+def correlation(map_a, map_b):
     """
     Spearman correlation between two maps.
     Input:
@@ -179,23 +163,6 @@ def spearman(map_a, map_b):
     spearmanr = spearman_1D(flat_a, flat_b)
     return spearmanr
 
-
-#### Pearson correlation #####
-def pearson(map_a, map_b):
-    """
-    Spearman correlation between two maps.
-    Input:
-        map_a: n x n numpy array
-        map_b: n x n numpy array
-    Returns:
-        scalar: pearsonr
-    """
-
-    flat_a = map_a.reshape(-1)
-    flat_b = map_b.reshape(-1)
-
-    pearsonr = pearson_1D(flat_a, flat_b)
-    return pearsonr
 
 
 #### SSI #####
@@ -217,6 +184,53 @@ def ssim_map(map_a, map_b):
     ssim_val = ssim(map_a_filled, map_b_filled)
 
     return ssim_val
+
+
+
+# ---------------- CONTACT MAP METHODS ---------------- #
+
+def vectorMethodToScalar(method, map_a, map_b, finalCompMetric='all', return_tracks=False):
+    """
+    Wrapper for the functions that output vectors or "tracks"
+    and then compare the outputs of two vectors using MSE, SpearmanR, PearsonR.
+    Will default with returning a dictionary with all 3 comparison measures.
+    Alternatively you can specify the final comparison measure with finalCompMetric.
+
+    Methods that can use this include: insulation_track, contact_directionality_track, calculate_decay_track,
+    triangle_track, eigenvector_track,
+
+    Input:
+        method: method to convert matrix to flattened vector track (e.g. insulation_track)
+        map_a: n x n numpy array
+        map_b: n x n numpy array
+        finalCompMetric: either 'all', 'corr', or 'mse'
+        return_tracks: boolean if you want to return the 1D array tracks
+    Returns:
+        if finalCompMetric != 'all', returns a scalar value
+        if finalCompMetric == 'all', returns a dictionary of comparisons with all 3
+        (spearmanr, and mse)
+    """
+
+    map_a_filled, map_b_filled = fill_missing_points_map(map_a, map_b, fill=np.nan)
+
+    a_track = method(map_a_filled)
+    b_track = method(map_b_filled)
+
+    if finalCompMetric == 'all':
+        output = {'corr': spearman_1D(a_track, b_track),
+                  'mse': mse_1D(a_track, b_track)}
+    elif finalCompMetric == 'corr':
+        output = spearman_1D(a_track, b_track)
+    elif finalCompMetric == 'mse':
+        output = mse_1D(a_track, b_track)
+    else:
+        raise ValueError(
+            f"finalCompMetric specified ({finalCompMetric}) is not understood. Use either 'all', 'corr', or 'mse'")
+
+    if return_tracks:
+        return output, (a_track, b_track)
+
+    return output
 
 
 #### SCC #####
@@ -242,56 +256,8 @@ def scc(map_a, map_b):
     return scc
 
 
-# ---------------- MAP-MOTIVATED METHODS ---------------- #
 
-def vectorMethodToScalar(method, map_a, map_b, finalCompMetric='all', return_tracks=False):
-    """
-    Wrapper for the functions that output vectors or "tracks"
-    and then compare the outputs of two vectors using MSE, SpearmanR, PearsonR.
-    Will default with returning a dictionary with all 3 comparison measures.
-    Alternatively you can specify the final comparison measure with finalCompMetric.
-
-    Methods that can use this include: insulation_track, DI_track, calculate_decay_track,
-    triangle_track, contact_pca_track,
-
-    Input:
-        method: method to convert matrix to flattened vector track (e.g. insulation_track)
-        map_a: n x n numpy array
-        map_b: n x n numpy array
-        finalCompMetric: either 'all', 'spearmanr', 'pearsonr', or 'mse'
-        return_tracks: boolean if you want to return the 1D array tracks
-    Returns:
-        if finalCompMetric != 'all', returns a scalar value
-        if finalCompMetric == 'all', returns a dictionary of comparisons with all 3
-        (spearmanr, pearsonr, and mse)
-    """
-
-    map_a_filled, map_b_filled = fill_missing_points_map(map_a, map_b, fill=np.nan)
-
-    a_track = method(map_a_filled)
-    b_track = method(map_b_filled)
-
-    if finalCompMetric == 'all':
-        output = {'spearmanr': spearman_1D(a_track, b_track),
-                  'pearsonr': pearson_1D(a_track, b_track),
-                  'mse': mse_1D(a_track, b_track)}
-    elif finalCompMetric == 'spearmanr':
-        output = spearman_1D(a_track, b_track)
-    elif finalCompMetric == 'pearsonr':
-        output = pearson_1D(a_track, b_track)
-    elif finalCompMetric == 'mse':
-        output = mse_1D(a_track, b_track)
-    else:
-        raise ValueError(
-            f"finalCompMetric specified ({finalCompMetric}) is not understood. Use either 'all', 'spearmanr', 'pearsonr', or 'mse'")
-
-    if return_tracks:
-        return output, (a_track, b_track)
-
-    return output
-
-
-#### INSULATION TRACK ####
+#### INSULATION ####
 # Calculated on upper triangles, nans are kept but nanmean are calculated
 def insulation_track(map, window_size=10, plot=False, ax=None):
     """
@@ -337,15 +303,13 @@ def insulation_track(map, window_size=10, plot=False, ax=None):
     return np.array(insulation_track)
 
 
-#### CONTACT DECAY TRACK ####
+#### DISTANCE ENRICHMENT ####
 
-def decay_track(contact_map):
+def distance_enrichment_track(contact_map):
     """
-    Calculate contact decay track.
+    Calculate Distance enrichment track.
     Input:
         map: n x n numpy array
-        plot: True or False
-        ax: if you want to plot on an already specified axis
     Output:
         n x 1 contact decay track.
     """
@@ -371,7 +335,7 @@ def decay_track(contact_map):
     return reduced_median['val'].values
 
 
-#### TRIANGLE TRACK ####
+#### TRIANGLE ####
 
 def triangle_track(contact_map, plot=False, ax=None, plottingParams=(.25, 0.15, 30)):
     """
@@ -441,8 +405,8 @@ def triangle_track(contact_map, plot=False, ax=None, plottingParams=(.25, 0.15, 
     return triangle_track
 
 
-#### Eigenvector difference ####
-def contact_pca_track(contact_map):
+#### EIGENVECTOR ####
+def eigenvector_track(contact_map):
     """
     Return first principal component of map.
 
@@ -458,7 +422,7 @@ def contact_pca_track(contact_map):
     return contact_pc1
 
 
-#### DIRECTIONALITY INDEX TRACK ####
+#### CONTACT DIRECTIONALITY ####
 
 def downres(input_map, new_resolution=40000, input_map_size=2 ** 20):
     """
@@ -475,7 +439,7 @@ def downres(input_map, new_resolution=40000, input_map_size=2 ** 20):
     return resized
 
 
-def DI_track(input_mat, input_map_size=2 ** 20,
+def contact_directionality_track(input_mat, input_map_size=2 ** 20,
              new_resolution=2000,
              window_resolution=10000,
              replace_ends=True,
@@ -519,9 +483,8 @@ def DI_track(input_mat, input_map_size=2 ** 20,
     return np.array(DI)
 
 
-# ------------ BIOLOGICALLY-INFORMED METHODS ------------ #
 
-# ### Loop caller ####
+### LOOPS ####
 # #input are matrices, calculated on upper triangles,nans are converted to 0 after get the exp
 # values of the matrix as the the current matrices are on log scale #haven't modified the code to output the ratios,
 # but if preferred after reviewing the code, could make the changes.
@@ -586,7 +549,8 @@ def findloops(matrix, p=2, width=5, ther=1.1, ther_H=1.1, ther_V=1.1):
 
 
 # get the same and different loops of two maps
-def loops_diff(wt_matrix, del_matrix, p=2, width=5, ther=1.1, ther_H=1.1, ther_V=1.1, radius=5, detail=False):
+def Loops(wt_matrix, del_matrix, p=2, width=5, ther=1.1, ther_H=1.1, ther_V=1.1, radius=5, detail=False):
+    
     """
     get the same and different loops of two maps
     Input:
@@ -640,9 +604,10 @@ def loops_diff(wt_matrix, del_matrix, p=2, width=5, ther=1.1, ther_H=1.1, ther_V
             'loss_ratio': len(loss) / max(len(del_all), len(wt_all))}
 
 
-# get the TAD boundaries and different between two maps
+
 #### TADs ####
-def TAD(wt_matrix, del_matrix, window_size=5, ther=0.2, radius=5, plot=False, detail=False):
+# get the TAD boundaries and different between two maps
+def TAD(wt_matrix, del_matrix, window_size=5, ther=0.2, radius=5, detail=False):
     """
     identity TAD boundaries from insulation profile and get the TAD boundaries difference between two maps
     Input:
@@ -651,15 +616,14 @@ def TAD(wt_matrix, del_matrix, window_size=5, ther=0.2, radius=5, plot=False, de
         window_size: size of the diamond-shaped window
         ther: the threshold for TAD boundaries
         radius: the upper bound of distance of two TADs considered as same
-        plot: True or False
         detail: print TAD boundary loci or the number of overlapped TAD boundaries
     Returns:
         if detail = True, return a dictionary of detailed TAD boundaries of wt, del, overlap, lost in del, gained in del
         if detail = False, return a dictionary of the number of TAD boundaries of wt, del, overlap,
             lost in del, gained in del
     """
-    insul_track = insulation_track(wt_matrix, window_size=window_size, plot=plot)
-    insul_track_del = insulation_track(del_matrix, window_size=window_size, plot=plot)
+    insul_track = insulation_track(wt_matrix, window_size=window_size)
+    insul_track_del = insulation_track(del_matrix, window_size=window_size)
 
     ##  find peak prominence, calculate insulation strength
     poss, proms = peaks.find_peak_prominence(-np.array(insul_track))
@@ -700,47 +664,37 @@ def run_scoring_functions(map_a, map_b):
     :param map_b: contact matrix (numpy)
     :return: dictionary of scoring results
     """
-    # Basic methods
+    
+    # Matrix methods
+    
     mse_score = mse(map_a, map_b)
-    spearmanr_score = spearman(map_a, map_b)
-    pearsonr_score = pearson(map_a, map_b)
+    correlation_score = correlation(map_a, map_b)
     ssim_score = ssim_map(map_a, map_b)
+    
+    # Contact map methods
+    
     scc_score = scc(map_a, map_b)
-
-    # Map-motivated methods
     insulation = vectorMethodToScalar(insulation_track, map_a, map_b)
-    contact_decay = vectorMethodToScalar(decay_track, map_a, map_b)
-    pca = vectorMethodToScalar(contact_pca_track, map_a, map_b)
-    di = vectorMethodToScalar(DI_track, map_a, map_b)
-
-    downres_a = downres(map_a, new_resolution=4681)  # 224 x 224
-    downres_b = downres(map_b, new_resolution=4681)  # 224 x 224
-    triangle = vectorMethodToScalar(triangle_track, downres_a, downres_b)
-
-    # Biologically motivated methods
-    TADs_info = TAD(map_a, map_b, plot=False, detail=True)
-    loops_info = loops_diff(map_a, map_b, p=2, width=5, ther=1.1, ther_H=1.1, ther_V=1.1, detail=True)
+    distance_enrichment = vectorMethodToScalar(distance_enrichment_track, map_a, map_b)
+    eigenvector = vectorMethodToScalar(eigenvector_track, map_a, map_b)
+    contact_directionality = vectorMethodToScalar(contact_directionality_track, map_a, map_b)
+    triangle = vectorMethodToScalar(triangle_track, 
+                                    downres(map_a, new_resolution=4681), 
+                                    downres(map_b, new_resolution=4681))
+    tads_score = TAD(map_a, map_b)
+    loops_score = Loops(map_a, map_b)
 
     return {'mse': mse_score,
-            'spearman': spearmanr_score,
-            'pearson': pearsonr_score,
-            'ssi': ssim_score,
+            'correlation': correlation_score,
+            'ssim': ssim_score,
             'scc': scc_score,
-            'eigenvector_mse': pca['mse'],
-            'eigenvector_spearmanr': pca['spearmanr'],
-            'eigenvector_pearsonr': pca['pearsonr'],
-            'DI_mse': di['mse'],
-            'DI_spearmanr': di['spearmanr'],
-            'DI_pearsonr': di['pearsonr'],
+            'eigenvector_corr': eigenvector['corr'],
+            'contact_directionality_corr': contact_directionality['corr'],
             'insulation_mse': insulation['mse'],
-            'insulation_spearmanr': insulation['spearmanr'],
-            'insulation_pearsonr': insulation['pearsonr'],
-            'contact_decay_mse': contact_decay['mse'],
-            'contact_decay_spearmanr': contact_decay['spearmanr'],
-            'contact_decay_pearsonr': contact_decay['pearsonr'],
+            'insulation_corr': insulation['corr'],
+            'distance_enrichment_corr': distance_enrichment['corr'],
             'triangle_mse': triangle['mse'],
-            'triangle_spearmanr': triangle['spearmanr'],
-            'triangle_pearsonr': triangle['pearsonr'],
-            'loops': loops_info,
-            'TADs': TADs_info
+            'triangle_corr': triangle['corr'],
+            'Loops': loops_score['overlap_ratio'],
+            'TADs': tads_score['overlap_ratio']
             }
