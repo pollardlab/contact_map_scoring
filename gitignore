@@ -1,8 +1,0 @@
-.gitignore
-.idea
-.DS_Store
-code/__pycache__
-code/.DS_Store
-data/.DS_Store
-notebooks/.ipynb_checkpoints
-notebooks/.DS_Store
