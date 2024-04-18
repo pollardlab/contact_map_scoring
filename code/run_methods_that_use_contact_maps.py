@@ -10,41 +10,47 @@ from cooltools.lib.numutils import interp_nan, set_diag
 from cooltools.lib.plotting import *
 
 
-
+########################################
 #### Fill out the following section ####
 
 
 # Enter file name for tab-delimited text file with genomic windows to score, that includes columns: chrom, start, end
-file_name = 'windows_to_score'
+file_name = '../data/experimental_maps/example_DEG_windows'
 
 
 # Enter file names for each experiment type. Comment out experiments you are not including.
 experiment_files = {
     
-    'MicroC':['cool_file1.mcool', 
-              'cool_file2.mcool']
-    ,
-    'HiC':['cool_file1.mcool',
-           'cool_file2.mcool']
+    'MicroC':['../data/experimental_maps/ESC_MicroC.mcool', 
+              '../data/experimental_maps/HFF_MicroC.mcool']
+#     ,
+#     'HiC':['cool_file1.mcool',
+#            'cool_file2.mcool']
     
                    }
 
 
 # Enter window sizes included and their resolution. Window size should be equal to end-start
-window_sizes = {'100kb':[100000, 2048],
-                '1Mb':[1000000, 2048],
-                '10Mb':[10000000, 20480]}
+window_sizes = {
+#     '100kb':[100000, 2048]
+#     ,
+                
+    '1Mb':[1000000, 2048]
+#     ,
+                
+#     '10Mb':[10000000, 20480]
+}
 
 
 # Enter output directory.
-output_dir = 'scores/'
+output_dir = '../data/experimental_maps/scores/'
 
 
-# Enter prefix for output file.
+# Enter output file name
 output_file = 'methods_that_use_contact_maps_scores' 
 
 
-# Choose scores to apply
+# Choose scores to apply by commenting out ones to skip
 score_types = [
     'correlation', # Spearman correlation 
        'mse', # Mean squared error
@@ -57,13 +63,13 @@ score_types = [
        'loops', # Loops
        'scc', # Stratum-adjusted correlation coefficient
        'tads', # TADs
-       'triangle_cor', # Triangle (corr)
+       'triangle_corr', # Triangle (corr)
        'triangle_mse' # Triangle (mse)
               ]
 
 
 
-
+#####################################################################################################
 #### The following section will run the selected methods for each experiment and window provided ####
 
 
@@ -83,7 +89,7 @@ scores = pd.DataFrame()
 for experiment in experiment_files.keys():
     scores_ = windows.copy()
     scores_['experiment'] = experiment
-    scores = pd.concat([scores, all_scores_], axis = 0)
+    scores = pd.concat([scores, scores_], axis = 0)
 
 
 
@@ -133,7 +139,7 @@ corr_scores = ['correlation',
                'insulation_corr',  
                'loops', 
                'tads',
-               'triangle_cor']
+               'triangle_corr']
 
 class scoring_map_methods:
     
@@ -162,16 +168,16 @@ class scoring_map_methods:
     # Contact map methods
     
     def contact_directionality_corr(self): # DI_track
-        return scoring.vectorMethodToScalar(scoring.contact_directionality_track, self.map_a, self.map_b, finalCompMetric = 'spearmanr')    
+        return scoring.vectorMethodToScalar(scoring.contact_directionality_track, self.map_a, self.map_b, finalCompMetric = 'corr')    
     
     def distance_enrichment_corr(self): # decay_track
-        return scoring.vectorMethodToScalar(scoring.distance_enrichment_track, self.map_a, self.map_b, finalCompMetric = 'spearmanr')   
+        return scoring.vectorMethodToScalar(scoring.distance_enrichment_track, self.map_a, self.map_b, finalCompMetric = 'corr')   
     
     def eigenvector_corr(self): # contact_pca_track
-        return scoring.vectorMethodToScalar(scoring.eigenvector_track, self.map_a, self.map_b, finalCompMetric = 'spearmanr')
+        return scoring.vectorMethodToScalar(scoring.eigenvector_track, self.map_a, self.map_b, finalCompMetric = 'corr')
 
     def insulation_corr(self): # insulation_track
-        return scoring.vectorMethodToScalar(scoring.insulation_track, self.map_a, self.map_b, finalCompMetric = 'spearmanr')
+        return scoring.vectorMethodToScalar(scoring.insulation_track, self.map_a, self.map_b, finalCompMetric = 'corr')
       
     def insulation_mse(self): # insulation_track
         return scoring.vectorMethodToScalar(scoring.insulation_track, self.map_a, self.map_b, finalCompMetric = 'mse')
@@ -186,7 +192,7 @@ class scoring_map_methods:
         return scoring.TAD(self.map_a, self.map_b)['overlap_ratio']
     
     def triangle_corr(self): # triangle_track
-        return scoring.vectorMethodToScalar(scoring.triangle_track, self.map_a, self.map_b, finalCompMetric = 'spearmanr')
+        return scoring.vectorMethodToScalar(scoring.triangle_track, self.map_a, self.map_b, finalCompMetric = 'corr')
 
     def triangle_mse(self): # triangle_track
         return scoring.vectorMethodToScalar(scoring.triangle_track, self.map_a, self.map_b, finalCompMetric = 'mse')

@@ -115,6 +115,75 @@ awk -F '\t' '$1 == "chr21"{ print }' example_cool_MicroC_2048.txt > example_cool
 Tab-delimited text files with results for each method, experiment, chromosome, and resolution saved in a new directory created separately for HiC compare and TADcompare
 
 
+### dcHiC
+
+#### Script
+[code/run_dcHiC.sh](https://github.com/pollardlab/contact_map_scoring/blob/main/code/run_dcHiC.sh)
+
+
+#### Installation requirements
+- h5py
+
+
+#### Directions
+Directions for running the dcHiC script can be printed with the help flag:
+```
+sh run_dcHiC.sh --h
+```
+
+Example of running dcHiC on MicroC data between ESC and HFF at 2,048 bp resolution in 1 Mb example windows:
+```
+sh run_dcHiC.sh \
+-C ../data/experimental_maps/ESC_MicroC.mcool \
+-c ../data/experimental_maps/HFF_MicroC.mcool \
+-r ../data/experimental_maps/example_DEG_windows_noheader \
+-P ESC_MicroC \
+-p HFF_MicroC \
+-g ../data/GRCh38_EBV_norandom_noEBV.chrom.sizes \
+-b 2048 \
+-o dcHiC_scores \
+-d ../data/experimental_maps/scores/
+```
+
+
+#### Input
+The following files are necessary for running dcHiC:
+- Two genome-wide contact map in .mcool format 
+- A file with windows of interest without a header and with columns: chrom, start, end 
+
+
+#### Output 
+Tab-delimited text files with scores for each provided genomic window in columns: dcHiC_mse, dcHiC_pearson, dcHiC_spearman.
+
+
+
+
+### Selfish
+
+#### Script
+[code/run_selfish.sh](https://github.com/pollardlab/contact_map_scoring/blob/main/code/run_selfish.sh)
+
+
+#### Installation requirements
+
+
+
+#### Directions
+
+
+#### Input
+The following files are necessary for running dcHiC:
+- Two genome-wide contact map in .mcool format 
+- H1_HFF_DEG_gene_regions_comparison.bedpe
+
+
+#### Output 
+
+
+
+
+
+
 
 ## Contact
 

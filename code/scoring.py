@@ -101,7 +101,11 @@ def spearman_1D(vector_a, vector_b):
         scalar value
     """
 
-    vector_a, vector_b = remove_missing_points_flat(vector_a, vector_b)
+    # For Distance enrichment, sometimes the vectors are not the same length so here we need to make them the same length
+    vector_a_ = vector_a[:min(len(vector_a), len(vector_b))]
+    vector_b_ = vector_b[:min(len(vector_a), len(vector_b))]
+    
+    vector_a, vector_b = remove_missing_points_flat(vector_a_, vector_b_)
 
     spearmanr_val, pval = stats.spearmanr(vector_a, vector_b)
     return spearmanr_val
