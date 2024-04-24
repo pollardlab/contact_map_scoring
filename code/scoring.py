@@ -341,7 +341,7 @@ def distance_enrichment_track(contact_map):
 
 #### TRIANGLE ####
 
-def triangle_track(contact_map, plot=False, ax=None, plottingParams=(.25, 0.15, 30)):
+def triangle_track(contact_map, plot=False, ax=None, plottingParams=(.25, 0.15, 30), lower_res = False):
     """
     Creates a track that calculates all sub-triangles of the upper triangle map
     For each sub-triangle, calculates an average contact. It
@@ -366,6 +366,10 @@ def triangle_track(contact_map, plot=False, ax=None, plottingParams=(.25, 0.15, 
     Returns:
         triangle track: n x 1 numpy array
     """
+    
+    if lower_res:
+        contact_map = downres(contact_map, new_resolution=4681)
+
     map_filled = fill_tril(contact_map.copy(), np.nan)  # set bottom triangle to nan
     map_filled_trimmed = map_filled[:-DIAG_OFFSET, DIAG_OFFSET:]  # Remove diagonal offset
 
@@ -444,10 +448,10 @@ def downres(input_map, new_resolution=40000, input_map_size=2 ** 20):
 
 
 def contact_directionality_track(input_mat, input_map_size=2 ** 20,
-             new_resolution=2000,
-             window_resolution=10000,
-             replace_ends=True,
-             buffer=50):
+                                 window_resolution=10000,
+                                 replace_ends=True,
+                                 buffer=50,
+                                 lower_res = False):
     """
     Calculate directionality index track
     Source: https://zhonglab.gitbook.io/3dgenome/chapter2-computational-analysis/3.2-higer-order-data-analysis/tad-calling-algorithms
@@ -455,18 +459,22 @@ def contact_directionality_track(input_mat, input_map_size=2 ** 20,
     Input:
         input_mat: n x n numpy array
         input_map_size: size of original map in bp
-        new_resolution: resolution of intended map in bp
         window_resolution: resolution of sliding window in bp
         replace_ends: replaces ends of DI track with 0s
         buffer: how far to replace with 0
     Output:
         DI track
     """
-    downres_map = downres(input_mat, new_resolution)
-    bp_per_pixels = np.around(input_map_size / new_resolution)
-    pixels_per_window = round(window_resolution / bp_per_pixels)
 
-    summed_map = np.nansum(downres_map, axis=0)  # contact summed across one axis
+    if lower_res:
+        input_mat = downres(input_mat, new_resolution=2000)
+        bp_per_pixels = np.around(input_map_size / 2000)
+        pixels_per_window = round(window_resolution / bp_per_pixels)
+    else:
+        bp_per_pixels = input_mat.shape[0]
+        pixels_per_window = round(window_resolution / bp_per_pixels)
+
+    summed_map = np.nansum(input_mat, axis=0)  # contact summed across one axis
     extended_map = np.concatenate([np.repeat(summed_map[0], pixels_per_window),
                                    summed_map,
                                    np.repeat(summed_map[0], pixels_per_window)])  # extend in window size each direction
@@ -662,7 +670,7 @@ def TAD(wt_matrix, del_matrix, window_size=5, ther=0.2, radius=5, detail=False):
 
 ############## Run all scoring functions ###################
 
-def run_scoring_functions(map_a, map_b):
+def run_scoring_functions(map_a, map_b, lower_res = False):
     """
     :param map_a: contact matrix (numpy)
     :param map_b: contact matrix (numpy)
@@ -681,12 +689,19 @@ def run_scoring_functions(map_a, map_b):
     insulation = vectorMethodToScalar(insulation_track, map_a, map_b)
     distance_enrichment = vectorMethodToScalar(distance_enrichment_track, map_a, map_b)
     eigenvector = vectorMethodToScalar(eigenvector_track, map_a, map_b)
-    contact_directionality = vectorMethodToScalar(contact_directionality_track, map_a, map_b)
-    triangle = vectorMethodToScalar(triangle_track, 
-                                    downres(map_a, new_resolution=4681), 
-                                    downres(map_b, new_resolution=4681))
     tads_score = TAD(map_a, map_b)
     loops_score = Loops(map_a, map_b)
+    if lower_res:
+        triangle = vectorMethodToScalar(triangle_track, 
+                                        downres(map_a, new_resolution=4681), 
+                                        downres(map_b, new_resolution=4681))
+        contact_directionality = vectorMethodToScalar(contact_directionality_track,  
+                                        downres(map_a, new_resolution=2000), 
+                                        downres(map_b, new_resolution=2000))
+    else:
+        triangle = vectorMethodToScalar(triangle_track, map_a, map_b)
+        contact_directionality = vectorMethodToScalar(contact_directionality_track, map_a, map_b)
+
 
     return {'mse': mse_score,
             'correlation': correlation_score,
