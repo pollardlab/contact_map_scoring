@@ -3,8 +3,10 @@
 ########################################
 #### Fill out the following section ####
 
-cool_file1 = '../data/experimental_maps/ESC_MicroC.mcool'
-cool_file2 = '../data/experimental_maps/HFF_MicroC.mcool'
+cool_file1='../data/experimental_maps/ESC_MicroC.mcool'
+cool_file2='../data/experimental_maps/HFF_MicroC.mcool'
+window_file='../data/experimental_maps/example_DEG_windows_noheader.bed'
+sample_prefixs=("ESC" "HFF")
 
 # Insert chromosomes to analyze here, with quotes and space-separated
 declare -a arrchr=("chr22")
@@ -24,12 +26,9 @@ for (( i=0; i<${chrlength}; i++ ));
 do
     for(( j=0; j<${reslength}; j++ ));
     do
-	selfish -f1 $cool_file1 -f2 $cool_file2 -ch ${arrchr[$i]} -r ${arrres[$j]} -t 0.05 -o ./H1ESC_HFFc6_selfish_${arrchr[$i]}_${arrres[$j]}.tsv
-        if [ -f H1_HFF_DEG_gene_regions_${arrchr[$i]}.bed ]; then
-            python get_overlap_count_modify.py -b H1_HFF_DEG_gene_regions_${arrchr[$i]}.bed -d H1ESC_HFFc6_selfish_${arrchr[$i]}_${arrres[$j]}.tsv -o H1_HFF_DEG_gene_regions_${arrchr[$i]}_${arrres[$j]}_selfish.tsv
-        else
-            cat /pollard/data/projects/skuang/Scoring/H1_HFF_DEG/chess_MicroC/H1_HFF_DEG_gene_regions_comparison.bedpe |awk -v chrom="${arrchr[$i]}" -F "\t" '{if($1==chrom){print $1"\t"$2"\t"$3}}' > H1_HFF_DEG_gene_regions_${arrchr[$i]}.bed
-            python get_overlap_count_modify.py -b H1_HFF_DEG_gene_regions_${arrchr[$i]}.bed -d H1ESC_HFFc6_selfish_${arrchr[$i]}_${arrres[$j]}.tsv -o H1_HFF_DEG_gene_regions_${arrchr[$i]}_${arrres[$j]}_selfish.tsv
-        fi
+	    selfish -f1 $cool_file1 -f2 $cool_file2 -ch ${arrchr[$i]} -r ${arrres[$j]} -t 0.05 -o ./${sample_prefixs[0]}_${sample_prefixs[1]}_selfish_${arrchr[$i]}_${arrres[$j]}.tsv
+        window_file_prefix="${window_file%.*}"
+	    awk -F "\t" -v chrom="${arrchr[$i]}" '{if($1==chrom){print $0}}' $window_file > ${window_file_prefix}_${arrchr[$i]}.bed
+        python get_overlap_count_selfish.py -b ${window_file_prefix}_${arrchr[$i]}.bed -d ${sample_prefixs[0]}_${sample_prefixs[1]}_selfish_${arrchr[$i]}_${arrres[$j]}.tsv -o ${window_file_prefix}_${arrchr[$i]}_${arrres[$j]}_selfish.tsv
     done
 done

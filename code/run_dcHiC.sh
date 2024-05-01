@@ -47,17 +47,17 @@ done
 if ! [[ -e "$cool_file1" && -e "$cool_file2" && -e "$region_file" ]]; then
       echo "Error! Two genome-wide contact maps, a region file and a dcHiC input file are needed." && usage 
 else
-    #python ${dchicdir}/utility/preprocess.py -input cool -file $cool_file1 -genomeFile $genome_size_file -res $bin_size -prefix $prefix1
-    #python ${dchicdir}/utility/preprocess.py -input cool -file $cool_file2 -genomeFile $genome_size_file -res $bin_size -prefix $prefix2
+    python ${dchicdir}/utility/preprocess.py -input cool -file $cool_file1 -genomeFile $genome_size_file -res $bin_size -prefix $prefix1
+    python ${dchicdir}/utility/preprocess.py -input cool -file $cool_file2 -genomeFile $genome_size_file -res $bin_size -prefix $prefix2
     input_file=input.${prefix1}_${prefix2}_${bin_size}.dcHiC.txt
-    #region_file1=${prefix1}_${bin_size}_abs.bed
-    #region_file2=${prefix2}_${bin_size}_abs.bed
-    #cat > ${input_file} <<EOF
-#${prefix1}_${bin_size}.matrix	$region_file1	${prefix1}_${bin_size}	${prefix1}
-#${prefix2}_${bin_size}.matrix	$region_file2	${prefix2}_${bin_size}	${prefix2}
-#EOF
-    #Rscript ${dchicdir}/dchicf.r --file $input_file --pcatype cis --dirovwt T --cthread $threads --pthread $threads
-    #Rscript ${dchicdir}/dchicf.r --file $input_file --pcatype select --dirovwt T --genome hg38
-    #Rscript ${dchicdir}/dchicf.r --file $input_file --pcatype analyze --dirovwt T --diffdir $outdir
+    region_file1=${prefix1}_${bin_size}_abs.bed
+    region_file2=${prefix2}_${bin_size}_abs.bed
+    cat > ${input_file} <<EOF
+${prefix1}_${bin_size}.matrix	$region_file1	${prefix1}_${bin_size}	${prefix1}
+${prefix2}_${bin_size}.matrix	$region_file2	${prefix2}_${bin_size}	${prefix2}
+EOF
+    Rscript ${dchicdir}/dchicf.r --file $input_file --pcatype cis --dirovwt T --cthread $threads --pthread $threads
+    Rscript ${dchicdir}/dchicf.r --file $input_file --pcatype select --dirovwt T --genome hg38
+    Rscript ${dchicdir}/dchicf.r --file $input_file --pcatype analyze --dirovwt T --diffdir $outdir
     python get_dcHiC_result.py --region_file $region_file --genome_size_file $genome_size_file --prefix1 $prefix1 --prefix2 $prefix2 --res $bin_size --datadir DifferentialResult/$outdir/pcQnm --outfile ${prefix1}_${prefix2}_${bin_size}_dcHiC_results.tsv
 fi

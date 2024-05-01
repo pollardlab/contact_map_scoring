@@ -4,7 +4,6 @@ import io
 import sys
 import numpy as np
 import pandas as pd
-import h5py
 import scoring
 import argparse
 
