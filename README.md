@@ -122,7 +122,7 @@ Tab-delimited text files with results for each method, experiment, chromosome, a
 
 
 #### Installation requirements
-- [dcHiC] (https://github.com/ay-lab/dcHiC)
+- [dcHiC](https://github.com/ay-lab/dcHiC)
 
 #### Directions
 Directions for running the dcHiC script can be printed with the help flag:
@@ -161,7 +161,7 @@ Tab-delimited text files with scores for each provided genomic window in columns
 
 #### Installation requirements
 
-- [Selfish] (https://github.com/ay-lab/selfish)
+- [Selfish](https://github.com/ay-lab/selfish)
 
 #### Directions
 - Change variables in the script following instructions there
@@ -186,7 +186,7 @@ Tab-delimited text files with the number of differential chromatin interactions 
 
 #### Installation requirements
 
-- [Arrowhead] (https://github.com/aidenlab/juicer/wiki/Installation)
+- [Arrowhead](https://github.com/aidenlab/juicer/wiki/Installation)
 
 #### Directions
 - Change variables in the script following instructions there
@@ -209,7 +209,7 @@ Tab-delimited text files with the TADs shared (within 20kb), gained or lost betw
 
 #### Installation requirements
 
-- [CHESS] (https://chess-hic.readthedocs.io/en/latest/installation.html)
+- [CHESS](https://chess-hic.readthedocs.io/en/latest/installation.html)
 
 #### Directions
 Directions for running the CHESS script can be printed with the help flag:
@@ -244,7 +244,7 @@ Tab-delimited text files with scores for each provided genomic window in columns
 
 #### Installation requirements
 
-- [HiC1Dmetrics] (https://h1d.readthedocs.io/en/latest/overview.html)
+- [HiC1Dmetrics](https://h1d.readthedocs.io/en/latest/overview.html)
 
 #### Directions
 Directions for running the HiC1Dmetrics script can be printed with the help flag:
