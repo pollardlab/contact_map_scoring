@@ -102,10 +102,10 @@ def spearman_1D(vector_a, vector_b):
     """
 
     # For Distance enrichment, sometimes the vectors are not the same length so here we need to make them the same length
-    vector_a_ = vector_a[:min(len(vector_a), len(vector_b))]
-    vector_b_ = vector_b[:min(len(vector_a), len(vector_b))]
+#     vector_a = vector_a[:min(len(vector_a), len(vector_b))]
+#     vector_b = vector_b[:min(len(vector_a), len(vector_b))]
     
-    vector_a, vector_b = remove_missing_points_flat(vector_a_, vector_b_)
+    vector_a, vector_b = remove_missing_points_flat(vector_a, vector_b)
 
     spearmanr_val, pval = stats.spearmanr(vector_a, vector_b)
     return spearmanr_val
@@ -130,7 +130,24 @@ def mse_1D(vector_a, vector_b):
     return mse
 
 
-# -------------------- BASIC METHODS -------------------- #
+def downres(input_map, new_resolution=40000, input_map_size=2 ** 20):
+    """
+    Change the resolution of the contact map.
+    input:
+        input_map: n x n numpy array
+        new_resolution (in bp)
+        input_map_size: original map size (in bp)
+    output:
+        m x m numpy array, where m is the no of bp per pixel
+    """
+    pixel_size = round(input_map_size / new_resolution)
+    resized = resize(input_map, (pixel_size, pixel_size), anti_aliasing=False)
+    return resized
+
+
+
+
+# -------------------- GLOBAL METHODS -------------------- #
 
 #### MSE #####
 def mse(map_a, map_b):
@@ -185,7 +202,7 @@ def ssim_map(map_a, map_b):
 
     map_a_filled, map_b_filled = fill_missing_points_map(map_a, map_b, fill=0)
 
-    ssim_val = ssim(map_a_filled, map_b_filled)
+    ssim_val = ssim(map_a_filled, map_b_filled, data_range=map_a_filled.max() - map_a_filled.min())
 
     return ssim_val
 
@@ -219,6 +236,10 @@ def vectorMethodToScalar(method, map_a, map_b, finalCompMetric='all', return_tra
 
     a_track = method(map_a_filled)
     b_track = method(map_b_filled)
+    
+    if len(a_track) != len(b_track):
+        a_track = a_track[:min(len(a_track), len(b_track))]
+        b_track = b_track[:min(len(a_track), len(b_track))]
 
     if finalCompMetric == 'all':
         output = {'corr': spearman_1D(a_track, b_track),
@@ -238,6 +259,7 @@ def vectorMethodToScalar(method, map_a, map_b, finalCompMetric='all', return_tra
 
 
 #### SCC #####
+
 def scc(map_a, map_b):
     """
     HiCRep stratum adjusted correlation between two maps.
@@ -262,6 +284,7 @@ def scc(map_a, map_b):
 
 
 #### INSULATION ####
+
 # Calculated on upper triangles, nans are kept but nanmean are calculated
 def insulation_track(map, window_size=10, plot=False, ax=None):
     """
@@ -414,6 +437,7 @@ def triangle_track(contact_map, plot=False, ax=None, plottingParams=(.25, 0.15, 
 
 
 #### EIGENVECTOR ####
+
 def eigenvector_track(contact_map):
     """
     Return first principal component of map.
@@ -432,25 +456,8 @@ def eigenvector_track(contact_map):
 
 #### CONTACT DIRECTIONALITY ####
 
-def downres(input_map, new_resolution=40000, input_map_size=2 ** 20):
-    """
-    Change the resolution of the contact map.
-    input:
-        input_map: n x n numpy array
-        new_resolution (in bp)
-        input_map_size: original map size (in bp)
-    output:
-        m x m numpy array, where m is the no of bp per pixel
-    """
-    pixel_size = round(input_map_size / new_resolution)
-    resized = resize(input_map, (pixel_size, pixel_size), anti_aliasing=False)
-    return resized
-
-
-def contact_directionality_track(input_mat, input_map_size=2 ** 20,
-                                 window_resolution=10000,
+def contact_directionality_track(input_mat,
                                  replace_ends=True,
-                                 buffer=50,
                                  lower_res = False):
     """
     Calculate directionality index track
@@ -458,8 +465,6 @@ def contact_directionality_track(input_mat, input_map_size=2 ** 20,
 
     Input:
         input_mat: n x n numpy array
-        input_map_size: size of original map in bp
-        window_resolution: resolution of sliding window in bp
         replace_ends: replaces ends of DI track with 0s
         buffer: how far to replace with 0
     Output:
@@ -468,12 +473,12 @@ def contact_directionality_track(input_mat, input_map_size=2 ** 20,
 
     if lower_res:
         input_mat = downres(input_mat, new_resolution=2000)
-        bp_per_pixels = np.around(input_map_size / 2000)
-        pixels_per_window = round(window_resolution / bp_per_pixels)
-    else:
-        bp_per_pixels = input_mat.shape[0]
-        pixels_per_window = round(window_resolution / bp_per_pixels)
 
+    pixels_per_window = 20
+    
+    # buffer: how far to replace with 0
+    buffer = int(0.1*input_mat.shape[0])
+    
     summed_map = np.nansum(input_mat, axis=0)  # contact summed across one axis
     extended_map = np.concatenate([np.repeat(summed_map[0], pixels_per_window),
                                    summed_map,
@@ -596,6 +601,14 @@ def Loops(wt_matrix, del_matrix, p=2, width=5, ther=1.1, ther_H=1.1, ther_V=1.1,
                 overlap_del.add((i, j))
     loss = wt_all - overlap_wt
     gain = del_all - overlap_del
+    
+    max_len_del_wt = max(len(del_all),len(wt_all))
+        
+    if max_len_del_wt == 0:
+        max_len_del_wt = 1
+        overlap_ratio = 1
+    else:
+        overlap_ratio = len(overlap_del)/max_len_del_wt
 
     if detail:
         return {'wt': list(wt_all),
@@ -609,11 +622,11 @@ def Loops(wt_matrix, del_matrix, p=2, width=5, ther=1.1, ther_H=1.1, ther_V=1.1,
             'wt': len(wt_all),
             'del': len(del_all),
             'overlap': len(overlap_del),
-            'overlap_ratio': len(overlap_del) / max(len(del_all), len(wt_all)),
+            'overlap_ratio': overlap_ratio,
             'gain': len(gain),
-            'gain_ratio': len(gain) / max(len(del_all), len(wt_all)),
+            'gain_ratio': len(gain) / max_len_del_wt,
             'loss': len(loss),
-            'loss_ratio': len(loss) / max(len(del_all), len(wt_all))}
+            'loss_ratio': len(loss) / max_len_del_wt}
 
 
 
@@ -649,6 +662,14 @@ def TAD(wt_matrix, del_matrix, window_size=5, ther=0.2, radius=5, detail=False):
     loss = list(set(poss[mask]) - set(overlap_wt))
     gain = list(set(poss_del[mask_del]) - set(overlap_del))
 
+    max_len_del_wt = max(len(poss_del[mask_del]), len(poss[mask]))
+        
+    if max_len_del_wt == 0:
+        max_len_del_wt = 1
+        overlap_ratio = 1
+    else:
+        overlap_ratio = len(overlap_del)/max_len_del_wt
+        
     if detail:
         return {'wt': list(zip(poss[mask], proms[mask])),
                 'del': list(zip(poss_del[mask_del], proms_del[mask_del])),
@@ -661,11 +682,11 @@ def TAD(wt_matrix, del_matrix, window_size=5, ther=0.2, radius=5, detail=False):
             'wt': len(poss[mask]),
             'del': len(poss_del[mask_del]),
             'overlap': len(overlap_del),
-            'overlap_ratio': len(overlap_del) / max(len(poss_del[mask_del]), len(poss[mask])),
+            'overlap_ratio': overlap_ratio,
             'gain': len(gain),
-            'gain_ratio': len(gain) / max(len(poss_del[mask_del]), len(poss[mask])),
+            'gain_ratio': len(gain) / max_len_del_wt,
             'loss': len(loss),
-            'loss_ratio': len(loss) / max(len(poss_del[mask_del]), len(poss[mask]))}
+            'loss_ratio': len(loss) / max_len_del_wt}
 
 
 ############## Run all scoring functions ###################
@@ -677,7 +698,7 @@ def run_scoring_functions(map_a, map_b, lower_res = False):
     :return: dictionary of scoring results
     """
     
-    # Matrix methods
+    # Global methods
     
     mse_score = mse(map_a, map_b)
     correlation_score = correlation(map_a, map_b)
@@ -691,16 +712,8 @@ def run_scoring_functions(map_a, map_b, lower_res = False):
     eigenvector = vectorMethodToScalar(eigenvector_track, map_a, map_b)
     tads_score = TAD(map_a, map_b)
     loops_score = Loops(map_a, map_b)
-    if lower_res:
-        triangle = vectorMethodToScalar(triangle_track, 
-                                        downres(map_a, new_resolution=4681), 
-                                        downres(map_b, new_resolution=4681))
-        contact_directionality = vectorMethodToScalar(contact_directionality_track,  
-                                        downres(map_a, new_resolution=2000), 
-                                        downres(map_b, new_resolution=2000))
-    else:
-        triangle = vectorMethodToScalar(triangle_track, map_a, map_b)
-        contact_directionality = vectorMethodToScalar(contact_directionality_track, map_a, map_b)
+    triangle = vectorMethodToScalar(triangle_track, map_a, map_b)
+    contact_directionality = vectorMethodToScalar(contact_directionality_track, map_a, map_b)
 
 
     return {'mse': mse_score,
