@@ -37,8 +37,9 @@ if ! [[ -e "$cool_file1" && -e "$cool_file2" && -e "$region_comp_file" ]]; then
     echo "Error! Two genome-wide contact maps and a region file in bedpe format are needed for experimental data." && usage 
 else
     if [[ $cool_file1 == *.mcool ]]; then
-        chess sim -p $threads ${cool_file1}::resolutions/${bin_size} ${cool_file2}::resolutions/${bin_size} $region_comp_file ${output_prefix}_chess_results.tsv
+        chess sim -p $threads ${cool_file1}::resolutions/${bin_size} ${cool_file2}::resolutions/${bin_size} $region_comp_file ${output_prefix}_chess_results_details.tsv
     else
-        chess sim -p $threads $cool_file1 $cool_file2 $region_comp_file ${output_prefix}_chess_results.tsv
-    fi   
+        chess sim -p $threads $cool_file1 $cool_file2 $region_comp_file ${output_prefix}_chess_results_details.tsv
+    fi
+    cat ${output_prefix}_chess_results.tsv |grep -v 'ID'| paste $region_comp_file - |tr " " "\t" |cut -f1,2,3,12,13|awk 'BEGIN{print "chrom\tstart\tend\tSN\tssim"}; {print $0}' > ${output_prefix}_chess_results.tsv  
 fi

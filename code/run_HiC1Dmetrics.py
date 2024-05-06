@@ -83,8 +83,8 @@ def run_HiC1Dmetrics_target_matrix(df,res,genome_hic_cool_1,genome_hic_cool_2,sa
     num_regs = df.shape[0]
     for i in range(num_regs):
         chrom = df.iloc[i]['chrom']
-        start = df.iloc[i]['window_start']
-        end = df.iloc[i]['window_end']
+        start = df.iloc[i]['start']
+        end = df.iloc[i]['end']
         mseq_str = '%s:%d-%d' % (chrom, start, end)
         seq_hic_raw_s1 = genome_hic_cool_1.matrix(balance=True).fetch(mseq_str)
         seq_hic_raw_s1_row = np.r_[[(start//res)*res+res*np.array(range(seq_hic_raw_s1.shape[0]))],seq_hic_raw_s1]
@@ -117,7 +117,7 @@ def run_HiC1Dmetrics_target_matrix(df,res,genome_hic_cool_1,genome_hic_cool_2,sa
                 cmd += f' {res} {chrom} --datatype matrix'
             else:
                 cmd += f' {res} {chrom} --datatype matrix -p {param}'
-            cmd += f' {sample_name1}_vs_{sample_name2}_{i}_{metric}'
+            cmd += f' -o {outdir}/{chrom}/{res}/{sample_name1}_vs_{sample_name2}_{i}_{metric}'
             hic1d_jobs.append(cmd)
 
     exec_par(hic1d_jobs, num_processes, verbose=True)
@@ -135,12 +135,16 @@ def extract_HiC1Dmetrics_results(df,res,sample_name1,sample_name2,outdir):
             metric_value = data_df['value'].abs().mean()
             metric_value_list.append(metric_value)
         df[metric] = metric_value_list
+    df.drop(columns=['window'],inplace=True)
     df.to_csv(f'{outdir}/{sample_name1}_vs_{sample_name2}_comp_HiC1Dmetrics_results_{res}.tsv',sep='\t',index=False)  
             
 if __name__ == '__main__':
     regs = pd.read_table(reg_file,header=0,sep='\t')
+    regs['window'] = regs['end']-regs['start']
     regs_sub = regs[(regs['window']==window_size) & (regs['chrom']==chrom)]
-    run_HiC1Dmetrics_target_matrix(regs_sub,res,cool_file1,cool_file2,sample_name1,sample_name2,num_processes,outdir)
+    clr_s1 = cooler.Cooler(f'{cool_file1}::resolutions/{res}')
+    clr_s2 = cooler.Cooler(f'{cool_file2}::resolutions/{res}')
+    run_HiC1Dmetrics_target_matrix(regs_sub,res,clr_s1,clr_s2,sample_name1,sample_name2,num_processes,outdir)
     extract_HiC1Dmetrics_results(regs_sub,res,sample_name1,sample_name2,outdir)
 
            

@@ -17,6 +17,7 @@ outfile = args.output
 def get_overlap_count(bed_file,diff_loop_file,outfile):
     diff_loops = open(diff_loop_file,"r").readlines()
     fout = open(outfile, "w")
+    fout.write('\t'.join(['chrom','start','end','Selfish','\n']))
     with open(bed_file,'r') as f:
         for line in f:
             reg = line.strip().split('\t')
