@@ -260,6 +260,7 @@ python run_HiC1Dmetrics.py \
 -a ESC
 -b HFF 
 -r 2048 \
+-w 1000000 \
 -c chr21
 -n 8 \
 -o ../data/experimental_maps/scores/HiC1Dmetrics_scores
