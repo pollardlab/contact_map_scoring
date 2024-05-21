@@ -97,7 +97,7 @@ for experiment in experiment_files.keys():
 def get_experimental_map(myseq_str, genome_hic_cool):
 
     num_counts= np.sum(genome_hic_cool.matrix(balance=False).fetch(myseq_str))
-    seq_hic_obs = genome_hic_cool.matrix(balance=False).fetch(myseq_str)
+    seq_hic_obs = genome_hic_cool.matrix(balance=True).fetch(myseq_str)
     
     seq_hic_smoothed =  adaptive_coarsegrain(
                      seq_hic_obs,  
