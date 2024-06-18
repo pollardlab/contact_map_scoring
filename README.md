@@ -3,7 +3,7 @@
 Preprint link: https://www.biorxiv.org/content/10.1101/2023.04.04.535480v1
 
 In this repo, you can find:
-- [Code](https://github.com/pollardlab/contact_map_scoring/blob/main/code/scoring.py) and [Tutorials](https://github.com/pollardlab/contact_map_scoring/tree/main/notebooks) for running scoring methods on both experimental and predicted contact frequency maps.
+- [Code](https://github.com/pollardlab/contact_map_scoring/blob/main/code) and [Tutorials](https://github.com/pollardlab/contact_map_scoring/tree/main/notebooks) for running scoring methods on both experimental and predicted contact frequency maps.
 - [Dataset](https://github.com/pollardlab/contact_map_scoring/tree/main/data) of:
 	* Scores for _in silico_ insertions and deletions throughout the genome
 	* Scores comparing windows around differentially expressed genes between ESC and HFF in chromosomes 21 and 22
