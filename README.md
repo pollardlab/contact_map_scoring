@@ -94,22 +94,16 @@ Rscript run_tad_hic_compare.R
 ````
 
 #### Input
-Two chromosome-specific text files generated from cool files. Input file format: {input_file_prefix}_{experiment}_{chromosome}_{resolution}.txt
+Two chromosome-specific text files generated from cool files.
 
-Example of generating chromosome-specific text file for:
-- input_file_prefix: example_cool
-- experiment: MicroC
-- chromosome: chr21
-- resolution: 2048
-
-1. Create chromosome-wide text file from cool file:
+1. Create text file from cool file:
 ```
-cooler dump --join example_cool_MicroC.mcool::/resolutions/2048 > example_cool_MicroC_2048.txt
+cooler dump --join ESC_MicroC.mcool::/resolutions/2048 > ESC_MicroC_2048.txt
 ```
 
-2. Create chromosome-specific text file from chromosome-wide text file:
+2. Create chromosome-specific text file from genome-wide text file:
 ```
-awk -F '\t' '$1 == "chr21"{ print }' example_cool_MicroC_2048.txt > example_cool_MicroC_chr21_2048.txt
+awk -F '\t' '$1 == "chr21"{ print }' ESC_MicroC_2048.txt > ESC_MicroC_2048_chr21.txt
 ```
 
 
