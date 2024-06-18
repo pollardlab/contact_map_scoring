@@ -232,4 +232,3 @@ dependencies:
     - pyfaidx==0.7.2.1
     - simplejson==3.19.1
     - wrapt==1.15.0
-prefix: /Users/lgunsalus/opt/anaconda3/envs/scoring

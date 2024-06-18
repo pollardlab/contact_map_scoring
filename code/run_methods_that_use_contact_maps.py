@@ -15,7 +15,7 @@ from cooltools.lib.plotting import *
 
 
 # Enter file name for tab-delimited text file with genomic windows to score, that includes columns: chrom, start, end
-file_name = '../data/experimental_maps/example_DEG_windows'
+file_name = '../data/experimental_maps/example_input/example_DEG_windows.bed'
 
 
 # Enter file names for each experiment type. Comment out experiments you are not including.
@@ -43,7 +43,7 @@ window_sizes = {
 
 
 # Enter output directory.
-output_dir = '../data/experimental_maps/scores/'
+output_dir = '../data/experimental_maps/example_output/'
 
 
 # Enter output file name

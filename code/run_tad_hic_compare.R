@@ -12,14 +12,14 @@ library('HiCcompare')
 chroms = c('chr21', 'chr22')
 
 # Enter resolutions to analyze
-resolutions = c('2048', '4096', '8192', '10240', '20480')
+resolutions = c('2048')
 
 # Enter prefix for input files. Input files should be Input file format: {input_file1}_{experiment}_{chrom}_{resolution}.txt
-input_file1 = 'cool1'
-input_file2 = 'cool2'
+input_file1 = '../data/experimental_maps/example_input/ESC_MicroC.mcool'
+input_file2 = '../data/experimental_maps/example_input/HFF_MicroC.mcool'
 
 # Enter output directory. A new directory will be created within that separately for HiC compare and TADcompare results
-output_dir = 'scores/'
+output_dir = '../data/experimental_maps/example_output/'
 
 # Enter prefix for output files. Output file names will be: {output_file}_{experiment}_{chrom}_{resolution}.txt
 output_file = 'results_all_res' 

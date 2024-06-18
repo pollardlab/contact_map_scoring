@@ -5,7 +5,7 @@
 
 cool_file1='../data/experimental_maps/ESC_MicroC.mcool'
 cool_file2='../data/experimental_maps/HFF_MicroC.mcool'
-window_file='../data/experimental_maps/example_DEG_windows_noheader.bed'
+window_file='../data/experimental_maps/example_input/example_DEG_windows_noheader.bed'
 sample_prefixs=("ESC" "HFF")
 
 # Insert chromosomes to analyze here, with quotes and space-separated

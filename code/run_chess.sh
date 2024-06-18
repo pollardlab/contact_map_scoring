@@ -13,6 +13,7 @@ usage() {
     -b : bin size for contact map. Default is 2048.
     -t : The CPU threads for parallelized processing. Default is 8.
     -o : The prefix of output files.
+    -d : The output file(s) directory.
     -h : Show usage help
 EOF
     exit 1
@@ -26,6 +27,7 @@ while getopts :C:c:R:b:t:o:h opt; do
         b) bin_size=${OPTARG};;
         t) threads=${OPTARG};;
         o) output_prefix=${OPTARG};;
+        d) output_dir=${OPTARG};;
         h) usage;;
     esac
 done
@@ -37,9 +39,9 @@ if ! [[ -e "$cool_file1" && -e "$cool_file2" && -e "$region_comp_file" ]]; then
     echo "Error! Two genome-wide contact maps and a region file in bedpe format are needed for experimental data." && usage 
 else
     if [[ $cool_file1 == *.mcool ]]; then
-        chess sim -p $threads ${cool_file1}::resolutions/${bin_size} ${cool_file2}::resolutions/${bin_size} $region_comp_file ${output_prefix}_chess_results_details.tsv
+        chess sim -p $threads ${cool_file1}::resolutions/${bin_size} ${cool_file2}::resolutions/${bin_size} $region_comp_file ${output_file}_details.tsv
     else
-        chess sim -p $threads $cool_file1 $cool_file2 $region_comp_file ${output_prefix}_chess_results_details.tsv
+        chess sim -p $threads $cool_file1 $cool_file2 $region_comp_file ${output_file}_details.tsv
     fi
-    cat ${output_prefix}_chess_results.tsv |grep -v 'ID'| paste $region_comp_file - |tr " " "\t" |cut -f1,2,3,12,13|awk 'BEGIN{print "chrom\tstart\tend\tSN\tssim"}; {print $0}' > ${output_prefix}_chess_results.tsv  
+    cat ${output_file}.tsv |grep -v 'ID'| paste $region_comp_file - |tr " " "\t" |cut -f1,2,3,12,13|awk 'BEGIN{print "chrom\tstart\tend\tSN\tssim"}; {print $0}' > ${output_dir}${output_file}.tsv  
 fi
